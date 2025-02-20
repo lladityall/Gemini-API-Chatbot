@@ -1,6 +1,10 @@
 import os
 import streamlit as st
 import google.generativeai as genai
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+import pandas as pd
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -27,7 +31,7 @@ safety_settings = [
 
 # Initialize the model
 model = genai.GenerativeModel(
-    model_name="gemini-2.0-pro-exp-02-05",
+    model_name="gemini-2.0-flash",
     safety_settings=safety_settings,
     generation_config=generation_config,
     system_instruction=(
@@ -74,3 +78,35 @@ if st.button("Send") and user_input:
     # Update chat history
     st.session_state.chat_history.append({"role": "user", "parts": [user_input]})
     st.session_state.chat_history.append({"role": "model", "parts": [model_response]})
+
+# Generate and display sample graphs
+st.subheader("📊 Data Visualizations")
+
+# User-provided data input
+uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
+if uploaded_file is not None:
+    df = pd.read_csv(uploaded_file)
+    st.write("### Uploaded Data")
+    st.dataframe(df)
+    
+    # Bar Chart
+    st.write("### Bar Chart")
+    fig, ax = plt.subplots()
+    sns.barplot(x=df["Branch"], y=df["CGPI"], color='red')
+    ax.set_title("CGPI by Branch")
+    st.pyplot(fig)
+    
+    # Histogram
+    st.write("### Histogram")
+    fig, ax = plt.subplots()
+    sns.histplot(df["CGPI"], bins=10, color='blue', kde=True, ax=ax)
+    ax.set_title("CGPI Distribution")
+    st.pyplot(fig)
+    
+    # Heatmap
+    st.write("### Heatmap")
+    heatmap_data = df.select_dtypes(include=[np.number])
+    fig, ax = plt.subplots()
+    sns.heatmap(heatmap_data.corr(), cmap="coolwarm", annot=True, ax=ax)
+    ax.set_title("Feature Correlation Heatmap")
+    st.pyplot(fig)
